@@ -1,21 +1,23 @@
 
+import { IPaginatedRequest } from "../../../shared/interfaces/IPaginatedRequest";
+import { IPaginatedResponse } from "../../../shared/interfaces/IPaginatedResponse";
 import { Product } from "../model/Product";
 
 
 interface ICreateProductDto {
   name: string;
   //brand: Brand;
-  //specification?: Specification;
+  specification_id?: string;
 }
 
 interface IProductsRepository {
-  create({ name}: ICreateProductDto): Product;
+  create({ name, specification_id }: ICreateProductDto): Product;
   save(product: Product): Promise<Product>;
-  // update(product: Product): void;
-  list(): Promise<Product[]>;
+  // update(product: Product): Promise<Product>;
+  list(paginatedRequest:  IPaginatedRequest<Product>): Promise<IPaginatedResponse<Product>>;
   // findByName(name: string): Product | undefined;
-  // findById(id: string): Product | undefined;
-  // delete(id: string): void;
+  findById(id: string): Promise<Product | undefined>;
+  delete(id: string): Promise<void>;
 }
 
 export { IProductsRepository, ICreateProductDto };

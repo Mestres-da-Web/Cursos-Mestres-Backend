@@ -1,23 +1,31 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Specification } from './Specification';
+import { Brand } from './Brand';
 
 @Entity("products")
 class Product {
 
   @PrimaryGeneratedColumn('uuid')
-  id?: string;
+  id: string;
 
   @Column()
   name: string;
 
-  //brand: Brand;
+  @Column()
+  brand_id: string;
+  
+  @ManyToOne(() => Brand)
+  @JoinColumn({ name: 'brand_id' })
+  brand: Brand;
 
-  //specification?: Specification;
+  @Column({ nullable: true })
+  specification_id?: string
 
-  constructor() {
-    this.name = '';
+  @ManyToOne(() => Specification)
+  @JoinColumn({ name: 'specification_id' })
+  specification?: Specification;
 
-  }
 }
 
 export { Product };

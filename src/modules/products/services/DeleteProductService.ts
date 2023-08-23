@@ -1,4 +1,5 @@
 
+import { inject, injectable } from 'tsyringe';
 import { AppError } from '../../../AppError';
 import { IProductsRepository } from '../repositories/IProductsRepository';
 
@@ -6,15 +7,19 @@ interface IRequest {
   id: string;
 }
 
+@injectable()
 class DeleteProductService {
-  constructor(private productsRepository: IProductsRepository) {}
+  constructor(
+    @inject('ProductsRepository')
+    private productsRepository: IProductsRepository,
+  ) {}
 
-  execute({ id }: IRequest): void {
-    const productExists = this.productsRepository.findById(id);
+  async execute({ id }: IRequest): Promise<void> {
+    const productExists = await this.productsRepository.findById(id);
     if(!productExists){
       throw new AppError("Produto não encontrado", 404);
     }
-    this.productsRepository.delete(id);
+    this.productsRepository.delete(productExists.id);
   }
 }
 

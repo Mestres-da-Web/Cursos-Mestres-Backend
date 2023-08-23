@@ -6,10 +6,11 @@ export function globalErrorHandler(error: any, request: Request, response: Respo
         return response.status(error.statusCode).json({
             status: 'error',
             message: error.message
+            
         })
     }
 
-    response.status(500).json({
+    return response.status(500).json({
         status: 'error',
         message: 'Server Error ' + error
     })

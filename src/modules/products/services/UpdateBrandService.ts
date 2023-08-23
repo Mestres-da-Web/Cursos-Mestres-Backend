@@ -1,22 +1,31 @@
+import { inject, injectable } from 'tsyringe';
 import { AppError } from '../../../AppError';
 import { IBrandsRepository } from '../repositories/IBrandsRepository';
+import { Brand } from '../model/Brand';
 
 interface IRequest {
   id: string;
   name: string;
 }
 
+@injectable()
 class UpdateBrandService {
-  constructor(private brandsRepository: IBrandsRepository) {}
+  constructor(
+    @inject('BrandsRepository')
+    private brandsRepository: IBrandsRepository
+  ) {}
 
-  execute({ id, name }: IRequest): void {
-    const brandExists = this.brandsRepository.findById(id);
+  async execute({ id, name }: IRequest): Promise<Brand> {
+    const brandExists = await this.brandsRepository.findBy({
+      id,
+    });
     if(!brandExists){
       throw new AppError("Marca não encontrada", 404);
     }
 
     brandExists.name = name;
-    this.brandsRepository.update(brandExists);
+    const savedBrand = this.brandsRepository.save(brandExists);
+    return savedBrand;
   }
 }
 

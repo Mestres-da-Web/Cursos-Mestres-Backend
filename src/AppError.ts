@@ -1,3 +1,4 @@
+// comentario qualquer
 export class AppError {
     message: string;
     statusCode: number;

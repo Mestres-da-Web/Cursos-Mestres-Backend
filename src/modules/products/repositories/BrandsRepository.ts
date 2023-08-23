@@ -1,51 +1,47 @@
+import { IPaginatedRequest } from '../../../shared/interfaces/IPaginatedRequest';
+import { IPaginatedResponse } from '../../../shared/interfaces/IPaginatedResponse';
 import { Brand } from '../model/Brand';
 import { IBrandsRepository, ICreateBrandDto } from './IBrandsRepository';
-import { getRepository } from 'typeorm'
+import { Repository, getRepository } from 'typeorm'
 
 class BrandsRepository implements IBrandsRepository {
-  private brands: Brand[] = [];
+  private ormRepository: Repository<Brand>;
 
   constructor() {
-    this.brands = [];
+    this.ormRepository = getRepository(Brand);
   }
 
   create({ name }: ICreateBrandDto): Brand {
-    const brand = new Brand();
-
-    Object.assign(brand, {
-      name,
-      created_at: new Date(),
-    });
-
-    this.brands.push(brand);
-
-    return brand;
+    return this.ormRepository.create({name});
   }
 
-  list(): Brand[] {
-    return this.brands;
+  async list({
+    page = 1,
+    limit = 50,
+  }: IPaginatedRequest<Brand>): Promise<IPaginatedResponse<Brand>> {
+    const [results, total] = await this.ormRepository.findAndCount({
+      skip: (page - 1)*limit,
+      take: limit,
+    })
+
+    return {
+      results,
+      limit,
+      page,
+      total
+    }
   }
 
-  findByName(name: string): Brand | undefined {
-    const brand = this.brands.find(brand => brand.name === name);
-
-    return brand;
+  async findBy(filters: Partial<Brand>): Promise<Brand | undefined> {
+    return await this.ormRepository.findOne(filters)
   }
 
-  findById(id: string): Brand | undefined {
-    const brand = this.brands.find(brand => brand.id === id);
-
-    return brand;
+  async delete(id: string): Promise<void> {
+    await this.ormRepository.delete(id);
   }
 
-  delete(id: string): void {
-    this.brands = this.brands.filter(brand => brand.id !== id);
-  }
-
-  update(updateBrand: Brand): void {
-    const brand = this.brands.find(brand => brand.id === updateBrand.id)!;
-
-    brand.name = updateBrand.name;
+  async save(brand: Brand): Promise<Brand> {
+    return await this.ormRepository.save(brand);
   }
   
 }

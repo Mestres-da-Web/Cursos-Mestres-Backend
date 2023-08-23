@@ -1,3 +1,5 @@
+import { IPaginatedRequest } from "../../../shared/interfaces/IPaginatedRequest";
+import { IPaginatedResponse } from "../../../shared/interfaces/IPaginatedResponse";
 import { Product } from "../model/Product";
 import { IProductsRepository, ICreateProductDto } from "./IProductsRepository";
 import { getRepository, Repository } from "typeorm";
@@ -9,9 +11,9 @@ class ProductsRepository implements IProductsRepository {
     this.ormRepository = getRepository(Product);
   }
 
-  create({ name }: ICreateProductDto): Product {
+  create(productParams: ICreateProductDto): Product {
     const product = this.ormRepository.create({
-      name: name,
+      ...productParams,
     })
     return product;
   }
@@ -21,10 +23,23 @@ class ProductsRepository implements IProductsRepository {
     return savedProduct;
   }
 
-  async list(): Promise<Product[]> {
-    const products = await this.ormRepository.find({})
+  async list({
+    limit = 50,
+    page = 1,
+  }: IPaginatedRequest<Product>): Promise<IPaginatedResponse<Product>> {
+    
+    const [products, total] = await this.ormRepository.findAndCount({
+      skip: (page - 1)*limit,
+      take: limit,
+      relations: []
+    })
 
-    return products;
+    return {
+      results: products,
+      limit,
+      page,
+      total,
+    };
   }
 
   // findByName(name: string): Product | undefined {
@@ -33,36 +48,20 @@ class ProductsRepository implements IProductsRepository {
   //   return product;
   // }
 
-  // findById(id: string): Product | undefined {
-  //   const product = this.products.find((product) => product.id === id);
+  async findById(id: string): Promise<Product | undefined> {
+    const product = await this.ormRepository.findOne({
+      where: {
+        id
+      }
+    })
 
-  //   return product;
-  // }
+    return product;
+  }
 
-  // delete(id: string): void {
-  //   const product = this.products.find((product) => product.id === id);
-  //   if (product) {
-  //     product.brand.products = product.brand.products.filter(
-  //       (product) => product.id !== id
-  //     );
-  //   }
+  async delete(id: string): Promise<void> {
+    await this.ormRepository.delete(id)
+  }
 
-  //   this.products = this.products.filter((product) => product.id !== id);
-  // }
-
-  // update(updateProduct: Product): void {
-  //   const product = this.products.find(
-  //     (product) => product.id === updateProduct.id
-  //   )!;
-
-  //   product.name = updateProduct.name;
-  //   product.brand = updateProduct.brand;
-  //   product.specification = updateProduct.specification;
-
-  //   if (product.specification) {
-  //     product.specification.products.push(product);
-  //   }
-  // }
 }
 
 export { ProductsRepository };

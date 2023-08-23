@@ -1,5 +1,6 @@
 
 import { AppError } from '../../../AppError';
+import { Product } from '../model/Product';
 import { Specification } from '../model/Specification';
 import { IBrandsRepository } from '../repositories/IBrandsRepository';
 import { IProductsRepository } from '../repositories/IProductsRepository';
@@ -17,13 +18,16 @@ class CreateProductService {
   constructor(
     @inject('ProductsRepository')
     private productsRepository: IProductsRepository,
+    
+    @inject('SpecificationsRepository')
+    private specificationsRepository: ISpecificationsRepository,
 
     //@inject('BrandsRepository')
     //private brandsRepository: IBrandsRepository,
-    p//rivate specificationsRepository: ISpecificationsRepository
+    //rivate specificationsRepository: ISpecificationsRepository
     ) {}
 
-  execute({ name, brand_id, specification_id }: IRequest): void {
+  async execute({ name, brand_id, specification_id }: IRequest): Promise<Product> {
     // const brand = this.brandsRepository.findById(brand_id);
 
     // if(!brand){
@@ -32,16 +36,24 @@ class CreateProductService {
 
     // let specification: Specification | undefined = undefined;
     
-    // if(specification_id){
-    //   specification = this.specificationsRepository.findById(specification_id);
-    // }
+    if(specification_id){
+      const specification = await this.specificationsRepository.findBy({
+        id: specification_id,
+      });
+
+      if(!specification){
+        throw new AppError("Especificação não encontrada ", 404)
+      }
+    }
 
     // const productAlreadyExists = this.productsRepository.findByName(name);
     // if (productAlreadyExists) {
     //   throw new AppError('Produto já existe!', 403);
     // }
-    const product = this.productsRepository.create({ name });
-    this.productsRepository.save(product);
+    const product = this.productsRepository.create({ name, specification_id });
+    const savedProduct = this.productsRepository.save(product);
+
+    return savedProduct;
   }
 }
 

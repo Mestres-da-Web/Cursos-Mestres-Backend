@@ -1,42 +1,61 @@
-// import { Request, Response } from "express";
-// import { createSpecificationService, specificationsRepository, updateSpecificationService, deleteSpecificationService }  from '../..'
-// import { myClassTransformer } from "../../ClassTransformer";
+import { Request, Response } from "express";
+import { container } from "tsyringe";
+import { CreateSpecificationService } from "../services/CreateSpecificationService";
+import { IndexSpecificationService } from "../services/IndexSpecificationService";
+import { DeleteSpecificationService } from "../services/DeleteSpecificationService";
+import { UpdateSpecificationService } from "../services/UpdateSecificationService";
 
-// class SpecificationController {
-//     create(request: Request, response: Response) {
-//         const { name, description } = request.body;
+class SpecificationController {
+    async create(request: Request, response: Response): Promise<Response> {
+        const { name, description } = request.body;
+        
+        const createSpecificationService = container.resolve(CreateSpecificationService);
 
-//         createSpecificationService.execute({name, description});
+        const createdSpecification = await createSpecificationService.execute({name, description});
 
-//         response.status(200).send();
+        return response.status(200).send(createdSpecification);
+    }
 
-//     }
+    async list(request: Request, response: Response): Promise<Response> {
 
-//     list(request: Request, response: Response): Response {
+        const { page, limit } = request.query;
 
-//         const specifications = specificationsRepository.list();
+        const indexSpecificationService = container.resolve(IndexSpecificationService)
 
-//         return response.status(200).send(myClassTransformer(specifications));
-//     }
+        const paginatedResponse = await indexSpecificationService.execute({
+            page: Number(page),
+            limit: Number(limit)
+        });
 
-//     update(request: Request, response: Response) {
-//         const { id } = request.params;
-//         const { name, description } = request.body;
+        return response.status(200).send(paginatedResponse);
+    }
 
-//         updateSpecificationService.execute({id, name, description});
+    async update(request: Request, response: Response): Promise<Response> {
+        const { id } = request.params;
+        const { name, description } = request.body;
 
-//         response.status(200).send();
+        const updateSpecificationService = container.resolve(UpdateSpecificationService);
 
-//     }
+        const updated = await updateSpecificationService.execute({
+            description,
+            id,
+            name,
+        })
 
-//     delete(request: Request, response: Response) {
-//         const { id } = request.params;
+        return response.status(200).send(updated);
 
-//         deleteSpecificationService.execute({id});
+    }
 
-//         response.status(200).send();
+    async delete(request: Request, response: Response): Promise<void> {
+        const { id } = request.params;
 
-//     }
-// }
+        const deleteSpecificationService = container.resolve(DeleteSpecificationService);
 
-// export { SpecificationController };
+        await deleteSpecificationService.execute({id});
+
+        response.status(200).send();
+
+    }
+}
+
+export { SpecificationController };

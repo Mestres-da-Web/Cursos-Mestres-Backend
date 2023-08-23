@@ -1,58 +1,87 @@
+import { Repository, getRepository } from 'typeorm';
 import { Specification } from '../model/Specification';
 import {
   ICreateSpecificationDto,
   ISpecificationsRepository,
 } from './ISpecificationsRepository';
+import { IPaginatedRequest } from '../../../shared/interfaces/IPaginatedRequest';
+import { IPaginatedResponse } from '../../../shared/interfaces/IPaginatedResponse';
 
 class SpecificationsRepository implements ISpecificationsRepository {
-  private specifications: Specification[] = [];
+  private ormRepository: Repository<Specification>;
 
   constructor() {
-    this.specifications = [];
+    this.ormRepository = getRepository(Specification);
   }
 
-  create({ name, description }: ICreateSpecificationDto): Specification {
-    const specification = new Specification();
-
-    Object.assign(specification, {
-      name,
-      description,
-      created_at: new Date(),
+  create(createData: ICreateSpecificationDto): Specification {
+    const specification = this.ormRepository.create({
+      ...createData
     });
 
-    this.specifications.push(specification);
+    return specification;
+  }
+
+  async save(specParams: Specification): Promise<Specification> {
+    const savedSpecification = await this.ormRepository.save(specParams);
+
+    return savedSpecification;
+  }
+
+  async findById(id: string): Promise<Specification | undefined> {
+    const specification = await this.ormRepository.findOne({
+      where: {
+        id,
+      }
+    });
 
     return specification;
   }
 
-  list(): Specification[] {
-    return this.specifications;
-  }
-
-  findByName({ name }: ICreateSpecificationDto): Specification | undefined {
-    const specification = this.specifications.find(
-      specification => specification.name === name,
-    );
+  async findByName(name: string): Promise<Specification | undefined> {
+    const specification = await this.ormRepository.findOne({
+      where: {
+        name,
+      }
+    });
 
     return specification;
   }
 
-  findById(id: string): Specification | undefined {
-    const specification = this.specifications.find(spec => spec.id === id);
+  async findBy(filters: Partial<Specification>): Promise<Specification | undefined> {
+    const specification = await this.ormRepository.findOne(filters);
 
     return specification;
   }
 
-  update(updateSpecification: Specification): void {
-    const specification = this.specifications.find(spec => spec.id === updateSpecification.id)!;
+  async list({
+    limit = 50,
+    page = 1,
+  }: IPaginatedRequest<Specification>): Promise<IPaginatedResponse<Specification>> {
+    
+    const [specifications, total] = await this.ormRepository.findAndCount({
+      skip: (page - 1)*limit,
+      take: limit,
+    })
 
-    specification.name = updateSpecification.name;
-    specification.description = updateSpecification.description;
+    return {
+      results: specifications,
+      limit,
+      page,
+      total,
+    };
   }
 
-  delete(id: string): void {
-    this.specifications = this.specifications.filter(spec => spec.id !== id);
+  // findByName({ name }: ICreateSpecificationDto): Specification | undefined {
+  //   const specification = this.specifications.find(
+  //     specification => specification.name === name,
+  //   );
 
+  //   return specification;
+  // }
+
+  async delete(id: string): Promise<void> {
+    await this.ormRepository.delete(id);
   }
   
 }

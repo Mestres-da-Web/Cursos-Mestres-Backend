@@ -2,10 +2,8 @@
 import { inject, injectable } from 'tsyringe';
 import { Product } from '../model/Product';
 import { IProductsRepository } from '../repositories/IProductsRepository';
-
-interface IRequest {
-
-}
+import { IPaginatedRequest } from '../../../shared/interfaces/IPaginatedRequest';
+import { IPaginatedResponse } from '../../../shared/interfaces/IPaginatedResponse';
 
 @injectable()
 class IndexProductService {
@@ -14,9 +12,12 @@ class IndexProductService {
     private productsRepository: IProductsRepository
     ) {}
 
-  async execute(): Promise<Product[]> {
+  async execute(paginatedRequest: IPaginatedRequest<Product>): Promise<IPaginatedResponse<Product>> {
 
-    const products = await this.productsRepository.list();
+    const products = await this.productsRepository.list({
+      limit: paginatedRequest.limit,
+      page: paginatedRequest.page
+    });
 
     return products;
   }

@@ -11,9 +11,11 @@ productsRouter.post('/', productController.create);
 
 productsRouter.get('/', productController.list);
 
-// productsRouter.delete('/:id', productController.delete);
+productsRouter.get('/:id', productController.show);
 
-// productsRouter.put('/:id', productController.update);
+productsRouter.delete('/:id', productController.delete);
+
+productsRouter.put('/:id', productController.update);
 
 
 

@@ -1,7 +1,9 @@
 
 
+import { inject, injectable } from 'tsyringe';
 import { AppError } from '../../../AppError';
 import { ISpecificationsRepository } from '../repositories/ISpecificationsRepository';
+import { Specification } from '../model/Specification';
 
 interface IRequest {
   id: string;
@@ -9,11 +11,17 @@ interface IRequest {
   description: string;
 }
 
+@injectable()
 class UpdateSpecificationService {
-  constructor(private specificationsRepository: ISpecificationsRepository) {}
+  constructor(
+    @inject('SpecificationsRepository')
+    private specificationsRepository: ISpecificationsRepository,
+  ) {}
 
-  execute({ id, name, description }: IRequest): void {
-    const specificationExists = this.specificationsRepository.findById(id);
+  async execute({ id, name, description }: IRequest): Promise<Specification> {
+    const specificationExists = await this.specificationsRepository.findBy({
+      id,
+    });
 
     if(!specificationExists){
       throw new AppError("Especificação não encontrado", 404);
@@ -21,7 +29,9 @@ class UpdateSpecificationService {
 
     specificationExists.name = name;
     specificationExists.description = description;
-    this.specificationsRepository.update(specificationExists);
+    const updatedSpecification = this.specificationsRepository.save(specificationExists);
+
+    return updatedSpecification;
   }
 }
 

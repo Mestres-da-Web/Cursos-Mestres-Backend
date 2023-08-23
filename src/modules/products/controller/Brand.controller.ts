@@ -1,43 +1,71 @@
-// import { Request, Response } from "express";
-// import { createBrandService, deleteBrandService, brandsRepository, updateBrandService } from '../..'
-// import { myClassTransformer } from "../../ClassTransformer";
+import { Request, Response } from "express";
+import { container } from "tsyringe";
+import { CreateBrandService } from "../services/CreateBrandService";
+import { IndexBrandService } from "../services/IndexBrandService";
+import { DeleteBrandService } from "../services/DeleteBrandService";
+import { UpdateBrandService } from "../services/UpdateBrandService";
+import { ShowBrandService } from "../services/ShowBrandService";
 
-// class BrandController {
-//     create(request: Request, response: Response) {
-//         const { name } = request.body;
+class BrandController {
+    async create(request: Request, response: Response): Promise<Response> {
+        const { name } = request.body;
 
-//         createBrandService.execute({name});
+        const createBrandService = container.resolve(CreateBrandService);
 
-//         return response.status(200).send();
+        const brand = await createBrandService.execute({
+            name,
+        });
 
-//     }
+        return response.status(200).send(brand);
+    }
 
-//     list(request: Request, response: Response): Response {
+    async list(request: Request, response: Response): Promise<Response> {
+        const { page, limit } = request.query;
 
-//         const brands = brandsRepository.list();
+        const indexBrandService = container.resolve(IndexBrandService);
 
-//         return response.status(200).send(myClassTransformer(brands));
-//     }
+        const brands = await indexBrandService.execute({
+            page: Number(page),
+            limit: Number(limit),
+        })
 
-//     delete(request: Request, response: Response): Response {
-//         const { id } = request.params;
+        return response.status(200).send(brands);
+    }
 
-//         deleteBrandService.execute({id});
+    async delete(request: Request, response: Response): Promise<Response> {
+        const { id } = request.params;
 
+        const deleteBrandService = container.resolve(DeleteBrandService);
 
-//         return response.status(200).send();
-//     }
-
-//     update(request: Request, response: Response): Response {
-//         const { id } = request.params;
-//         const { name } = request.body;
-
-//         updateBrandService.execute({id, name});
+        await deleteBrandService.execute({id});
 
 
-//         return response.status(200).send();
-//     }
+        return response.status(200).send();
+    }
 
-// }
+    async update(request: Request, response: Response): Promise<Response> {
+        const { id } = request.params;
+        const { name } = request.body;
 
-// export { BrandController };
+        const updateBrandService = container.resolve(UpdateBrandService);
+
+        const brand = await updateBrandService.execute({id,name});
+
+
+        return response.status(200).send(brand);
+    }
+
+    async show(request: Request, response: Response): Promise<Response> {
+        const { id } = request.params;
+
+        const showBrandService = container.resolve(ShowBrandService);
+
+        const brand = await showBrandService.execute({id});
+
+
+        return response.status(200).send(brand);
+    }
+
+}
+
+export { BrandController };
